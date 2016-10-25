@@ -3,13 +3,13 @@ This is a docker-testbed where an OMPI bug related to network is highlighted.
 
 references:
 
-	https://svn.open-mpi.org/trac/ompi/ticket/3339
+https://svn.open-mpi.org/trac/ompi/ticket/3339
 
-	https://www.open-mpi.org/faq/?category=tcp#ip-virtual-ip-interfaces
+https://www.open-mpi.org/faq/?category=tcp#ip-virtual-ip-interfaces
 
-	https://github.com/open-mpi/ompi/issues/203
+https://github.com/open-mpi/ompi/issues/203
 
-	http://stackoverflow.com/questions/15227933/cluster-hangs-shows-error-while-executing-simple-mpi-program-in-c
+http://stackoverflow.com/questions/15227933/cluster-hangs-shows-error-while-executing-simple-mpi-program-in-c
 
 It is today extremely useful to be able to run mpi in docker installations
 inside HPCs for a number of reasons.  In docker containers, network
