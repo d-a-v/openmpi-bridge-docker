@@ -60,5 +60,7 @@ In more details:
 * to log into containers, instructions to do so are printed using:
 
 	./1-RUNME ompi --debug
+	
 	[info]
+	
 	./ssh-to-container 10.243.1.3 (or whatever IP is displayed)
