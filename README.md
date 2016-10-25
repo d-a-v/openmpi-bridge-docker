@@ -21,7 +21,9 @@ The below scripts build a docker scenario with two containers running a
 parallel test with both openmpi and mpich.
 
 * BY RUNNING THESE SCRIPTS, ANY EXISTING DOCKER INSTALLATION WILL BE REMOVED
-* THESE SCRIPTS SUPPOSE SYSTEMD IS INSTALLED AND RUNNING
+
+* THESE SCRIPTS SUPPOSE SYSTEMD IS INSTALLED AND RUNNING if the option
+  --userns-remap=default is needed for security reasons
 
 To prevent any harm, it is adviced to try this in a (non-docker) virtual machine
 based on ubuntu-16.04.
