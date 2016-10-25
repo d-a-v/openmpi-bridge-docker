@@ -11,6 +11,8 @@ https://github.com/open-mpi/ompi/issues/203
 
 http://stackoverflow.com/questions/15227933/cluster-hangs-shows-error-while-executing-simple-mpi-program-in-c
 
+http://users.open-mpi.narkive.com/nWyjoU60/ompi-users-problem-running-an-mpi-applicatio-n-on-nodes-with-more-than-one-interface
+
 It is today extremely useful to be able to run mpi in docker installations
 inside HPCs for a number of reasons.  In docker containers, network
 interfaces are seen as "eth0" with no other interface present.  They are not
