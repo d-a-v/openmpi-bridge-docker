@@ -1,0 +1,19 @@
+#!/bin/sh
+
+set -e
+
+pwd=$(cd ${0%/*}; pwd)
+. $pwd/mpirun.env
+
+test -z $2 && { echo "syntax: $0 <docker-network-name> <docker-image> [<unique-id>]"; exit 1; }
+dockernetwork=$1
+
+# need docker image name + id for new container
+image=$2
+id="$image-$(hostname)-$(whoami)-$$"
+test -z $3 || id=$3
+
+hash=$(docker run --network ${dockernetwork} ${docker_options} --name "$id" "$image" sh -c "mkdir -p /var/run/sshd; /usr/sbin/sshd -D")
+temp=$(docker inspect --format "{{ .NetworkSettings.Networks.${dockernetwork}.IPAddress }}" "$id")
+ip=$(echo $temp)
+echo $ip

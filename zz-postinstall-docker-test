@@ -1,0 +1,51 @@
+#!/bin/sh
+
+./1-RUNME ompi -k
+./1-RUNME mpich -k
+
+set -e
+
+pwd=$(cd ${0%/*}; pwd)
+cd $pwd
+
+#### network
+
+netbr1=10.242
+netbr2=10.243
+
+docker network remove brtestdocker1 || true; \
+docker network create --subnet ${netbr1}.1.0/24 --gateway ${netbr1}.1.1 --label brtestdocker1 --driver bridge -o com.docker.network.bridge.name=brtestdocker1 brtestdocker1 && \
+docker network inspect brtestdocker1
+
+docker network remove brtestdocker2 || true; \
+docker network create --subnet ${netbr2}.1.0/24 --gateway ${netbr2}.1.1 --label brtestdocker2 --driver bridge -o com.docker.network.bridge.name=brtestdocker2 brtestdocker2 && \
+docker network inspect brtestdocker2
+
+#### docker user
+
+echo 'DOCKER_OPTS="--userns-remap=default"' > /etc/default/docker
+mkdir -p /etc/systemd/system/docker.service.d
+cat << EOF > /etc/systemd/system/docker.service.d/noroot.conf
+[Service]
+EnvironmentFile=-/etc/default/docker
+ExecStart=
+ExecStart=/usr/bin/dockerd \$DOCKER_OPTS
+EOF
+systemctl daemon-reload
+service docker restart
+
+#### break docker isolation between these two bridges
+
+echo "destroying docker isolation between our two bridges:"
+echo "----------------------------------------------------"
+iptables -L -v --line-numbers|egrep -e "(DROP.*brtestdocker.*brtestdocker|ISOLATION)"
+while true; do
+	dockerisolationrule=$(iptables -L -v --line-numbers|grep  DROP.*brtestdocker.*brtestdocker|awk '{print $1;}'|head -1)
+	test -z "${dockerisolationrule}" && break
+	iptables -D DOCKER-ISOLATION ${dockerisolationrule}
+done
+echo "----------------------------------------------------"
+echo "now:"
+echo "----------------------------------------------------"
+iptables -L -v --line-numbers|egrep -e "(DROP.*brtestdocker.*brtestdocker|ISOLATION)"
+echo "----------------------------------------------------"

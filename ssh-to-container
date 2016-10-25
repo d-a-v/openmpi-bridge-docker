@@ -1,0 +1,6 @@
+#!/bin/sh
+sshid=/tmp/.sshid-$USER
+pwd=$(cd ${0%/*}; pwd)
+cp ${pwd}/.files/ssh/user/id_rsa $sshid
+chmod 600 $sshid
+exec ssh -l root -i $sshid -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$@"

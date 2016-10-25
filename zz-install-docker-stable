@@ -1,0 +1,6 @@
+#!/bin/sh
+
+set -e
+
+dpkg --purge docker.io docker docker-engine || true
+wget -qO- https://get.docker.com/ | sh

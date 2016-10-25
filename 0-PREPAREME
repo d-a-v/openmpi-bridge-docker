@@ -1,0 +1,5 @@
+./zz-install-docker-stable
+./zz-postinstall-docker-test
+./updatefiles
+( cd img-testmpich/; docker build -t testmpich . )
+( cd img-testompi/; docker build -t testompi . )

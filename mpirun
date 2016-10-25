@@ -1,0 +1,211 @@
+#!/bin/bash
+# using bash for arrays
+
+#### global vars: 
+# hostarray	hostnames
+# cpuarray	numbers of tasks
+## (true/false:)
+# stop
+# debug
+# opmi
+# mpich
+
+help()
+{
+	exec="$1"
+	cat << EOF 1>&2
+$0 is a mpirun wrapper
+same options as original mpirun command's apply, plus the following:
+EOF
+	# inline show commented options
+	sed -n 's,^[ \t]*\(-.*\))\(.*\)#\(.*\),\t\1 \2\3,p' $0
+}
+
+show_hosts()
+{
+	index=0
+	while [ $index -lt $nhosts ]; do
+		echo "host: ${hostarray[$index]} cpu=${cpuarray[$index]}" 1>&2
+		index=$((index + 1))
+	done
+}
+
+# wants: a single host name
+# sets index (-1 if not found) and returns false or true
+host_known()
+{
+	s="$1"
+	index=0
+	while [ $index -lt $nhosts ]; do
+		test "$s" = ${hostarray[$index]} && return
+		index=$((index + 1))
+	done
+	index=-1
+	false
+}
+
+# wants: a-single-hostname [a-anumber]
+do_1host()
+{
+	host=$1
+	n=${2:-1}
+	
+	if host_known "$host"; then
+		cpuarray[$index]=$((cpuarray[$index] + $n))
+	else
+		hostarray[$nhosts]=$host
+		cpuarray[$nhosts]=$n
+		nhosts=$((nhosts + 1))
+	fi
+}
+
+# wants: a comma-list of hostname[:number]
+do_hosts()
+{
+	hostlist=$1
+	while [ ! -z "$hostlist" ]; do
+
+		# separate commas (host1,host2:3,host4)
+		host=${hostlist%%,*}
+		hostlist=${hostlist#${host}}
+		hostlist=${hostlist#,}
+		
+		# separate ':' (host2:3 -> host2 + 3)
+		hostname=${host%:*}
+		hostnum=${host#${hostname}}
+		hostnum=${hostnum#:}
+		hostnum=${hostnum:-1}
+
+		# add host
+		do_1host $hostname $hostnum
+	done
+}
+
+# wants: a mpi host/machine file name
+do_hostfile()
+{
+	temp=$(< "$1" sed \
+		-e 's,[ \t]*nslot=,:,g' \
+		-e 's/$/,/g' \
+	)
+
+	hosts=$(echo $temp | sed -e 's/, /,/g' -e 's/,$//g')
+
+	do_hosts $hosts
+}
+
+################################
+# entry point
+set -e
+
+# parse cmdline
+
+pwd=$(cd ${0%/*}; pwd)
+
+nhosts=0
+stop=false
+debug=false
+while [ "x$1" != x ]; do case "$1" in
+	
+	--machinefile|-machinefile|--hostfile|-hostfile)	# locally reworked
+		do_hostfile "$2"; shift;;
+	
+	--host|-host)						# locally reworked
+		do_hosts "$2"; shift;;
+	
+	--dockerimage|-dockerimage|dockerimage)			# specify docker image to run
+		docker="$2"; shift;;
+	
+	--id|-id)						# optional naming id
+		userid="$2"; shift;;
+	
+	--ompi|-ompi)						# openmpi flavour
+		ompi=true;;
+	
+	--mpich|-mpich)						# mpich flavour
+		mpich=true;;
+	
+	-k|--stop|-stop)					# stop docker containers
+		stop=true;;
+	
+	--debug|-debug)						# start docker containers, show ssh/mpirun command only
+		debug=true;;
+	
+	--help|-help|-h)					# this help
+		help "$0"; exit 1;;
+	
+	*)
+		args="$args '$1'";;
+
+esac; shift; done
+
+$debug && echo "common mpi args:$args"
+$debug && show_hosts
+
+if [ -z "$docker" ]; then
+	echo "need docker image, see help"
+	exit 1
+fi
+
+[ -z "$ompi" ] && ompi=false
+[ -z "$mpich" ] && mpich=false
+
+$ompi || $mpich || { echo "need -ompi or -mpich" 1>&2; help "$0"; exit 1; }
+
+# done parsing
+
+. $pwd/mpirun.env
+
+# now doing
+
+if $ompi; then
+
+mpiopts="${mpiopts} -mca plm_rsh_agent $ssh --allow-run-as-root"
+mpiopts="${mpiopts} ${ompiopts}"
+$debug && mpiopts="${mpiopts} ${ompiopts_dbg}"
+
+fi
+
+if $mpich; then
+
+mpiopts="${mpiopts} -launcher ssh -launcher-exec $ssh"
+mpiopts="${mpiopts} ${mpichopts}"
+$debug && mpiopts="${mpiopts} ${mpichopts_dbg}"
+
+fi
+
+index=0
+comma=''
+while [ $index -lt $nhosts ]; do
+	host=${hostarray[$index]}
+	num=${cpuarray[$index]}
+	index=$((index + 1))
+
+	id=$baseid-$host
+
+	if $stop; then
+		echo "stopping container '$id-$index' on '$host'"
+		docker rm -f $id-$index || true
+	else
+		ip=$(${pwd}/mpirun.run-sshd-in-docker-image $host $docker $id-$index) || exit 1
+		$debug && echo "id=$id-$index IP=$ip"
+		if $ompi; then
+			i=${num}
+			while [ $i -ne 0 ]; do
+				list="${list}${comma}${ip}"
+				comma=','
+				i=$((i - 1))
+			done
+		else
+			list="${list}${comma}${ip}:${num}"
+			comma=','
+		fi
+		lastip="$ip"
+	fi
+done
+
+
+$stop && exit 0
+
+$debug && { echo "command:"; echo "	$ssh $lastip \"mkdir -p '${workdir}'; cd '${workdir}'; mpirun $mpiopts -host ${list} $args\""; }
+$debug || $ssh $lastip "mkdir -p '${workdir}'; cd '${workdir}'; mpirun $mpiopts -host ${list} $args"

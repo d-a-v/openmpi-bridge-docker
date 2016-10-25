@@ -1,0 +1,28 @@
+#!/bin/sh
+
+if true; then
+apt-get -y install libopenmpi-dev; exit 0
+fi
+
+apt-get -y install git build-essential pkg-config sudo autoconf automake libtool libgettextpo-dev libreadline-dev m4 gfortran vim joe flex net-tools procps psmisc tcpdump
+
+pwd=$(cd ${0%/*}; pwd)
+cd ${pwd}
+git clone https://github.com/open-mpi/ompi.git
+
+set -e
+
+pwd
+. ./build-common
+
+(
+
+cd ompi
+./autogen.pl
+./configure --prefix=/usr/local
+make install
+
+echo "---------------"
+echo "-- $0 OK"
+echo "---------------"
+)

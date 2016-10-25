@@ -1,0 +1,8 @@
+
+cd ${0%/*}
+
+for d in img-*; do
+	if [ -d "$d" ]; then
+		cp -au .files "$d"/files
+	fi
+done
