@@ -1,8 +1,8 @@
 
 This is a docker-testbed where an OMPI bug related to network is highlighted.
 
-* BY RUNNING THESE SCRIPTS, ANY EXISTING DOCKER INSTALLATION WILL BE REMOVED *
-* THESE SCRIPTS SUPPOSE SYSTEMD IS INSTALLED AND RUNNING *
+* BY RUNNING THESE SCRIPTS, ANY EXISTING DOCKER INSTALLATION WILL BE REMOVED
+* THESE SCRIPTS SUPPOSE SYSTEMD IS INSTALLED AND RUNNING
 
 To prevent any harm, it is adviced to try this in a (non-docker) virtual machine
 based on ubuntu-16.04.
@@ -18,18 +18,18 @@ To demonstrate that the docker installation is viable, the same example
 generating the ompi bug is also runnable without bug using mpich:
 
 	./1-RUNME mpich
-Hello world: processor 0 of 2
-i am 1, sending to 0
-i am 0, recv from 1
-Hello world: processor 1 of 2
-That is all for now!
-i am 1, sent done to 0
+	Hello world: processor 0 of 2
+	i am 1, sending to 0
+	i am 0, recv from 1
+	Hello world: processor 1 of 2
+	That is all for now!
+	i am 1, sent done to 0
 
 	./1-RUNME ompi
-i am 1, sending to 0
-Hello world: processor 0 of 2
-i am 0, recv from 1
-(frozen from here)
+	i am 1, sending to 0
+	Hello world: processor 0 of 2
+	i am 0, recv from 1
+	(frozen from here)
 
 In more details:
 
@@ -54,9 +54,11 @@ In more details:
 * the RUNME script starts docker containers then use the local mpirun script
   to start the application. But is does not stop the containers.
   so to restart the application, containers must be stopped first:
+
 	./1-RUNME ompi -k
 
 * to log into containers, instructions to do so are printed using:
+
 	./1-RUNME ompi --debug
-  then:
+	[info]
 	./ssh-to-container 10.243.1.3 (or whatever IP is displayed)
