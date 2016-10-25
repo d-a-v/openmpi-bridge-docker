@@ -1,6 +1,21 @@
 
 This is a docker-testbed where an OMPI bug related to network is highlighted.
 
+references:
+	https://svn.open-mpi.org/trac/ompi/ticket/3339
+	https://www.open-mpi.org/faq/?category=tcp#ip-virtual-ip-interfaces
+	https://github.com/open-mpi/ompi/issues/203
+	http://stackoverflow.com/questions/15227933/cluster-hangs-shows-error-while-executing-simple-mpi-program-in-c
+
+It is today extremely useful to be able to run mpi in docker installations
+inside HPCs for a number of reasons.  In docker containers, network
+interfaces are seen as "eth0" with no other interface present.  They are not
+meant to be seen as virtual inside docker containers, but open-mpi still has
+a problem with them.
+
+The below scripts build a docker scenario with two containers running a
+parallel test with both openmpi and mpich.
+
 * BY RUNNING THESE SCRIPTS, ANY EXISTING DOCKER INSTALLATION WILL BE REMOVED
 * THESE SCRIPTS SUPPOSE SYSTEMD IS INSTALLED AND RUNNING
 
@@ -13,6 +28,18 @@ Two scripts are provided which are sufficient to trigger and highlight the bug.
 	cd openmpi-bridge-docker
 	./0-PREPAREME
 	./1-RUNME ompi
+	
+Due to a bug (https://github.com/opencontainers/runc/issues/769), running in
+a virtual machine is strongly adviced, because the security docker option
+userns-remap=default may be disabled (at least on ubuntu-xenial-16.04).
+
+before starting ./0-PREPAREME, edit zz-postinstall-docker-test and change:
+
+	echo 'DOCKER_OPTS="--userns-remap=default"' > /etc/default/docker
+
+to:
+
+	echo '#DOCKER_OPTS="--userns-remap=default"' > /etc/default/docker
 
 To demonstrate that the docker installation is viable, the same example
 generating the ompi bug is also runnable without bug using mpich:
