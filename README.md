@@ -54,7 +54,18 @@ generating the ompi bug is also runnable without bug using mpich:
 	(stop openmpi containers, restart them, display/copy/paste the run/debug command:)
 	$ ./1-RUNME ompi -k		# stop ompi containers
 	$ ./1-RUNME ompi --debug	# restart containers but not the application, show application command
-	$ /home/user/openmpi-bridge-docker/ssh-to-container 10.243.1.3 "mkdir -p '/tmp/'; cd '/tmp/'; mpirun  -mca plm_rsh_agent /home/user/openmpi-bridge-docker/ssh-to-container --allow-run-as-root  -mca btl self,tcp -mca btl_tcp_if_include eth0 -mca oob_tcp_if_include eth0  -mca btl_base_verbose 100 -mca orte_debug 1 -mca orte_debug_verbose 100 -mca orte_base_help_aggregate 0 -host 10.242.1.3,10.243.1.3  'sendrecv'"
+	$ ./ssh-to-container 10.243.1.3 " \
+		mkdir -p '/tmp/'; \
+		cd '/tmp/'; \
+		mpirun  -mca plm_rsh_agent /home/user/openmpi-bridge-docker/ssh-to-container \
+			--allow-run-as-root  -mca btl self,tcp \
+			-mca btl_tcp_if_include eth0 \
+			-mca oob_tcp_if_include eth0 \
+			-mca btl_base_verbose 100 \
+			-mca orte_debug 1 \
+			-mca orte_debug_verbose 100 -mca orte_base_help_aggregate 0 \
+			-host 10.242.1.3,10.243.1.3  'sendrecv' \
+		"
 	[... skip ...]
 	[26284fbaacbf:00017] select: initializing btl component tcp
 	[b4bf0f67d2ee:00024] select: initializing btl component tcp
@@ -107,21 +118,17 @@ In more details:
   preinstalled keys to log in using only dedicated local keyfiles.
 
 * two docker independant network bridges (which are regular linux bridges)
-  are setup and for the purpose of this demo, and are able to communicate to
-  each other (docker prevents this, but "iptables" commands re-enable this. 
-  hence this script "zz-postinstall-docker-test" also called by
-  "0-PREPAREME" - must be run also after a host reboot).
+  are setup for the purpose of this demo, and are able to communicate to
+  each other (docker prevents this, but some iptables commands re-enable
+  this.  Hence the script "zz-postinstall-docker-test" also called by
+  "0-PREPAREME" must be run also after a host reboot).
 
-* in the final setup, these two bridges are not lying on the same host, and
-  routing tables allow these local bridges to communicate to each other via
-  routing tables.
-
-* instead of lauching mpirun in the host, the ./mpirun script ssh into one
+* instead of starting mpirun from the host, the ./mpirun script ssh into one
   of the docker container so to start from the inside the real mpirun.
 
 * the RUNME script starts docker containers then use the local mpirun script
   to start the application. But is does not stop the containers.
-  so to restart the application, the most simple is to stop containers first:
+  To restart the application, the most simple is to stop containers first:
 
 	./1-RUNME ompi -k
 
@@ -131,10 +138,15 @@ In more details:
 	
 	[info]
 	
-	./ssh-to-container 10.242.1.3 (container1, whatever IP is displayed)
+	./ssh-to-container 10.242.1.3 # no args, container1
 
-	./ssh-to-container 10.243.1.3 (container2, whatever IP is displayed)
+	./ssh-to-container 10.243.1.3 # no args, container2
 
 * by using the --debug option, it is not necessary to stop the container to
   restart the application: simply pasting again the provided command will
   do.
+
+* in the final setup, these two bridges are not lying on the same host. 
+  Routing tables allow these local bridges to communicate to each other via
+  routing tables.  Problems on the final setup leaded me to make this
+  testbed heading to the same problem but able to run on a single host.
