@@ -1,6 +1,9 @@
 ./zz-install-docker-stable
+sudo usermod -a -G docker `whoami`
+newgrp docker << EOI
 ./zz-postinstall-docker-test
-usermod -a -G docker `whoami`
 ./updatefiles
 ( cd img-testmpich/; docker build -t testmpich . )
 ( cd img-testompi/; docker build -t testompi . )
+EOI
+exec newgrp docker
