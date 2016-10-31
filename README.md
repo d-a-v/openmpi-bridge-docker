@@ -51,19 +51,24 @@ generating the ompi bug is also runnable without bug using mpich:
 	(frozenstuckhung from here)
 	^C
 	
-	(stop openmpi containers, restart them, display/copy/paste the run/debug command:)
-	$ ./1-RUNME ompi -k		# stop ompi containers
-	$ ./1-RUNME ompi --debug	# restart containers but not the application, show application command
+	(stop openmpi containers)
+	$ ./1-RUNME ompi -k
+
+	(restart them, notice the displayed run/debug command:)
+	$ ./1-RUNME ompi --debug
+	
+	(copy/paste the result from above command:)
 	$ ./ssh-to-container 10.243.1.3 " \
-		mkdir -p '/tmp/'; \
-		cd '/tmp/'; \
-		mpirun  -mca plm_rsh_agent /home/user/openmpi-bridge-docker/ssh-to-container \
-			--allow-run-as-root  -mca btl self,tcp \
+		mkdir -p '/tmp/'; cd '/tmp/'; \
+		mpirun -mca plm_rsh_agent /home/user/openmpi-bridge-docker/ssh-to-container \
+			--allow-run-as-root \
+			-mca btl self,tcp \
 			-mca btl_tcp_if_include eth0 \
 			-mca oob_tcp_if_include eth0 \
 			-mca btl_base_verbose 100 \
 			-mca orte_debug 1 \
-			-mca orte_debug_verbose 100 -mca orte_base_help_aggregate 0 \
+			-mca orte_debug_verbose 100 \
+			-mca orte_base_help_aggregate 0 \
 			-host 10.242.1.3,10.243.1.3  'sendrecv' \
 		"
 	[... skip ...]
@@ -83,8 +88,8 @@ generating the ompi bug is also runnable without bug using mpich:
 	Hello world: processor 0 of 2
 	[b4bf0f67d2ee:00024] btl: tcp: attempting to connect() to [[61052,1],0] address 10.242.1.3 on port 1024
 	i am 0, recv from 1
-	(frozenstuckhung here again, but port 1024 on 10.242.1.3 is accessible from everywhere
-	 test from another terminal on host and on both containers:)
+	(frozenstuckhung here again, but port 1024 on 10.242.1.3 is accessible from everywhere,
+	(here are tests from another terminal:)
 
 	$ telnet 10.242.1.3 1024 # accessible from host
 	Trying 10.242.1.3...
@@ -126,7 +131,7 @@ In more details:
 * instead of starting mpirun from the host, the ./mpirun script ssh into one
   of the docker container so to start from the inside the real mpirun.
 
-* the RUNME script starts docker containers then use the local mpirun script
+* the 1-RUNME script starts docker containers then use the local mpirun script
   to start the application. But is does not stop the containers.
   To restart the application, the most simple is to stop containers first:
 
@@ -147,6 +152,6 @@ In more details:
   do.
 
 * in the final setup, these two bridges are not lying on the same host. 
-  Routing tables allow these local bridges to communicate to each other via
-  routing tables.  Problems on the final setup leaded me to make this
-  testbed heading to the same problem but able to run on a single host.
+  Routing tables allow these local bridges to communicate to each other. 
+  Problems on the final setup leaded me to make this testbed heading to the
+  same problem but able to run on a single host.
