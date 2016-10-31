@@ -26,12 +26,13 @@ parallel test with both openmpi and mpich.
 
 To prevent any harm, it is adviced to try this in a (non-docker) virtual machine.
 
-Two scripts are provided which are sufficient to trigger and highlight the bug.
+Two scripts are provided which are sufficient to trigger and highlight the
+bug.  The running user needs not be root, but must be sudoer.
 
-	git clone https://github.com/d-a-v/openmpi-bridge-docker.git
-	cd openmpi-bridge-docker
-	./0-PREPAREME
-	./1-RUNME ompi
+	$ git clone https://github.com/d-a-v/openmpi-bridge-docker.git
+	$ cd openmpi-bridge-docker
+	$ ./0-PREPAREME
+	$ ./1-RUNME ompi
 
 To demonstrate that the docker installation is viable, the same example
 generating the ompi bug is also runnable without bug using mpich:

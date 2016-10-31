@@ -1,5 +1,6 @@
 ./zz-install-docker-stable
 ./zz-postinstall-docker-test
+usermod -a -G docker `whoami`
 ./updatefiles
 ( cd img-testmpich/; docker build -t testmpich . )
 ( cd img-testompi/; docker build -t testompi . )

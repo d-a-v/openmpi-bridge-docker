@@ -49,14 +49,14 @@ fi
 
 echo "docker bridge isolation rules:"
 echo "----------------------------------------------------"
-iptables -L -v --line-numbers|egrep -e "(DROP.*brtestdocker.*brtestdocker|ISOLATION)"
+sudo iptables -L -v --line-numbers|egrep -e "(DROP.*brtestdocker.*brtestdocker|ISOLATION)"
 while true; do
-	dockerisolationrule=$(iptables -L -v --line-numbers|grep  DROP.*brtestdocker.*brtestdocker|awk '{print $1;}'|head -1)
+	dockerisolationrule=$(sudo iptables -L -v --line-numbers|grep  DROP.*brtestdocker.*brtestdocker|awk '{print $1;}'|head -1)
 	test -z "${dockerisolationrule}" && break
-	iptables -D DOCKER-ISOLATION ${dockerisolationrule}
+	sudo iptables -D DOCKER-ISOLATION ${dockerisolationrule}
 done
 echo "----------------------------------------------------"
 echo "no more isolation:"
 echo "----------------------------------------------------"
-iptables -L -v --line-numbers|egrep -e "(DROP.*brtestdocker.*brtestdocker|ISOLATION)"
+sudo iptables -L -v --line-numbers|egrep -e "(DROP.*brtestdocker.*brtestdocker|ISOLATION)"
 echo "----------------------------------------------------"

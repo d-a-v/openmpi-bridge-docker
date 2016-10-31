@@ -5,4 +5,5 @@ if [ -z "$1" ]; then
 	echo "	--debug to start containers only (ssh+mpi command will be shown)"
 	exit 1
 fi
+newgrp docker
 ./mpirun -host brtestdocker1,brtestdocker2 -dockerimage "test$1" -$1 sendrecv "$@"
