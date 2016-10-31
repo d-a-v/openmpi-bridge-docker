@@ -23,6 +23,15 @@ docker network inspect brtestdocker2
 
 #### docker user
 
+if false; then
+
+	# if enabled ("if true" above), systemd will launch docker
+	# with the option "--userns-remap=default" meaning that root
+	# inside container is not root on host.
+	# at the time of writing (16/10/31), there is ala a bug in ubuntu sometimes preventing this
+	# to run smoothly: https://github.com/opencontainers/runc/issues/769
+	
+# using systemd, start docker with root protection on
 echo 'DOCKER_OPTS="--userns-remap=default"' > /etc/default/docker
 mkdir -p /etc/systemd/system/docker.service.d
 cat << EOF > /etc/systemd/system/docker.service.d/noroot.conf
@@ -34,9 +43,11 @@ EOF
 systemctl daemon-reload
 service docker restart
 
+fi
+
 #### break docker isolation between these two bridges
 
-echo "destroying docker isolation between our two bridges:"
+echo "docker bridge isolation rules:"
 echo "----------------------------------------------------"
 iptables -L -v --line-numbers|egrep -e "(DROP.*brtestdocker.*brtestdocker|ISOLATION)"
 while true; do
@@ -45,7 +56,7 @@ while true; do
 	iptables -D DOCKER-ISOLATION ${dockerisolationrule}
 done
 echo "----------------------------------------------------"
-echo "now:"
+echo "no more isolation:"
 echo "----------------------------------------------------"
 iptables -L -v --line-numbers|egrep -e "(DROP.*brtestdocker.*brtestdocker|ISOLATION)"
 echo "----------------------------------------------------"
