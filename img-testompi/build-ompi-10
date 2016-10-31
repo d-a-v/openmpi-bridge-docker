@@ -10,8 +10,6 @@ pwd=$(cd ${0%/*}; pwd)
 cd ${pwd}
 git clone https://github.com/open-mpi/ompi.git
 
-set -e
-
 pwd
 . ./build-common
 
