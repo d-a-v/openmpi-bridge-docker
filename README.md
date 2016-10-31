@@ -161,7 +161,14 @@ In more details:
   "img-testompi/build-ompi-10", run the 2-UNINSTALL script then restart the
   0-PREPAREME.  docker image build time will be longer.
 
-* note on network interfaces:
+* in the final setup, these two bridges are not lying on the same host. 
+  Routing tables allow these local bridges to communicate to each other. 
+  Problems on the final setup leaded me to make this testbed heading to the
+  same problem but able to run on a single host.
+
+
+Informations about network interfaces:
+
   inside a container:
   	$ ./1-RUNME ompi --debug
   	[...skip...]
@@ -246,7 +253,3 @@ In more details:
 	brtestdocker2   8000.024207c320c4       no              vethb86ec05
 	docker0         8000.02427066b05e       no
 
-* in the final setup, these two bridges are not lying on the same host. 
-  Routing tables allow these local bridges to communicate to each other. 
-  Problems on the final setup leaded me to make this testbed heading to the
-  same problem but able to run on a single host.
