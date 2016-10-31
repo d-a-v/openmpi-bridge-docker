@@ -2,5 +2,5 @@
 
 set -e
 
-dpkg --purge docker.io docker docker-engine || true
-wget -qO- https://get.docker.com/ | sh
+sudo dpkg --purge docker.io docker docker-engine || true
+wget -qO- https://get.docker.com/ | sudo sh
