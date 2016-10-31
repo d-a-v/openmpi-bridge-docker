@@ -170,6 +170,7 @@ In more details:
 Informations about network interfaces:
 
   inside a container:
+
   	$ ./1-RUNME ompi --debug
   	[...skip...]
   	$ ./ssh-to-container 10.243.1.2
@@ -196,6 +197,7 @@ Informations about network interfaces:
 	(empty result)
 
   inside host:
+
   	brtestdocker1 and 2 are created by 0-PREPARE scripts, they are bridges.
   	docker0 is another bridge created by docker.
   	ens3 is the kvm interface.
