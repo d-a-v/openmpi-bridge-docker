@@ -32,12 +32,11 @@ bug.  The running user needs not be root, but must be sudoer.
 	$ git clone https://github.com/d-a-v/openmpi-bridge-docker.git
 	$ cd openmpi-bridge-docker
 	$ ./0-PREPAREME
-	$ ./1-RUNME ompi
 
 To demonstrate that the docker installation is viable, the same example
 generating the ompi bug is also runnable without bug using mpich:
 
-	./1-RUNME mpich
+	$ ./1-RUNME mpich
 	Hello world: processor 0 of 2
 	i am 1, sending to 0
 	i am 0, recv from 1
@@ -45,11 +44,58 @@ generating the ompi bug is also runnable without bug using mpich:
 	That is all for now!
 	i am 1, sent done to 0
 
-	./1-RUNME ompi
+	$ ./1-RUNME ompi
 	i am 1, sending to 0
 	Hello world: processor 0 of 2
 	i am 0, recv from 1
-	(frozen from here)
+	(frozenstuckhung from here)
+	^C
+	
+	(stop openmpi containers, restart them, display/copy/paste the run/debug command:)
+	$ ./1-RUNME ompi -k		# stop ompi containers
+	$ ./1-RUNME ompi --debug	# restart containers but not the application, show application command
+	$ /home/user/openmpi-bridge-docker/ssh-to-container 10.243.1.3 "mkdir -p '/tmp/'; cd '/tmp/'; mpirun  -mca plm_rsh_agent /home/user/openmpi-bridge-docker/ssh-to-container --allow-run-as-root  -mca btl self,tcp -mca btl_tcp_if_include eth0 -mca oob_tcp_if_include eth0  -mca btl_base_verbose 100 -mca orte_debug 1 -mca orte_debug_verbose 100 -mca orte_base_help_aggregate 0 -host 10.242.1.3,10.243.1.3  'sendrecv'"
+	[... skip ...]
+	[26284fbaacbf:00017] select: initializing btl component tcp
+	[b4bf0f67d2ee:00024] select: initializing btl component tcp
+	[26284fbaacbf:00017] select: init of component tcp returned success
+	[26284fbaacbf:00017] select: initializing btl component self
+	[26284fbaacbf:00017] select: init of component self returned success
+	[b4bf0f67d2ee:00024] select: init of component tcp returned success
+	[b4bf0f67d2ee:00024] select: initializing btl component self
+	[b4bf0f67d2ee:00024] select: init of component self returned success
+	[26284fbaacbf:00017] mca: bml: Using self btl to [[61052,1],0] on node 26284fbaacbf
+	[b4bf0f67d2ee:00024] mca: bml: Using self btl to [[61052,1],1] on node b4bf0f67d2ee
+	[b4bf0f67d2ee:00024] mca: bml: Using tcp btl to [[61052,1],0] on node 10.242.1.3
+	[26284fbaacbf:00017] mca: bml: Using tcp btl to [[61052,1],1] on node b4bf0f67d2ee
+	i am 1, sending to 0
+	Hello world: processor 0 of 2
+	[b4bf0f67d2ee:00024] btl: tcp: attempting to connect() to [[61052,1],0] address 10.242.1.3 on port 1024
+	i am 0, recv from 1
+	(frozenstuckhung here again, but port 1024 on 10.242.1.3 is accessible from everywhere
+	 test from another terminal on host and on both containers:)
+
+	$ telnet 10.242.1.3 1024 # accessible from host
+	Trying 10.242.1.3...
+	Connected to 10.242.1.3.
+	Escape character is '^]'.
+	^D
+	
+	$ ./ssh-to-container 10.242.1.3 telnet 10.242.1.3 1024 # accessible from container1
+	Warning: Permanently added '10.242.1.3' (ECDSA) to the list of known hosts.
+	Trying 10.242.1.3...
+	Connected to 10.242.1.3.
+	Escape character is '^]'.
+	^D
+	
+	$ ./ssh-to-container 10.243.1.3 telnet 10.242.1.3 1024 # accessible from container2
+	Warning: Permanently added '10.243.1.3' (ECDSA) to the list of known hosts.
+	Trying 10.242.1.3...
+	Connected to 10.242.1.3.
+	Escape character is '^]'.
+	^D
+	
+		
 
 In more details:
 
@@ -85,8 +131,10 @@ In more details:
 	
 	[info]
 	
-	./ssh-to-container 10.243.1.3 (or whatever IP is displayed)
+	./ssh-to-container 10.242.1.3 (container1, whatever IP is displayed)
 
-* using the --debug option, is is not necessary to stop the container to
-  restart the application: simply pasting again the provided provided will
+	./ssh-to-container 10.243.1.3 (container2, whatever IP is displayed)
+
+* by using the --debug option, it is not necessary to stop the container to
+  restart the application: simply pasting again the provided command will
   do.
