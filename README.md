@@ -1,6 +1,35 @@
 
 This is a docker-testbed where an OMPI bug related to network is highlighted.
 
+-----------------------------------------------------------
+
+Update 7-nov-16: This bug is now solved thanks to https://github.com/open-mpi/ompi/issues/2320
+
+The reason is because docker bridges are NATed, and talking from one bridge
+to another is also NAT-ed.  Allowing to talk between bridges without NAT-ing
+them do not transform source addresses so open-mpi is happy with recveived
+packets.  An ongoing open-mpi patch will notice the user about such
+incorrect packets.
+
+	$ ./10-RUNME ompi
+	i am 1, sending to 0
+	Hello world: processor 0 of 2
+	i am 0, recv from 1
+	(frozenstuckhung from here)
+	^C
+	
+	$ ./05-PREPAREME-FIXNAT
+
+	$ ./10-RUNME  ompi 
+	i am 1, sending to 0
+	Hello world: processor 0 of 2
+	i am 0, recv from 1
+	i am 1, sent done to 0
+	Hello world: processor 1 of 2
+	That is all for now!
+
+-----------------------------------------------------------
+
 It is today extremely useful to be able to run mpi in docker installations
 inside HPCs for a number of reasons.  In this docker container setup, the
 only network interface is seen as "eth0" and is bridged with another host
@@ -35,12 +64,12 @@ bug.  The running user needs not be root, but must be sudoer.
 
 	$ git clone https://github.com/d-a-v/openmpi-bridge-docker.git
 	$ cd openmpi-bridge-docker
-	$ ./0-PREPAREME
+	$ ./00-PREPAREME
 
 To demonstrate that the docker installation is viable, the same example
 generating the ompi bug is also runnable without bug using mpich:
 
-	$ ./1-RUNME mpich
+	$ ./10-RUNME mpich
 	Hello world: processor 0 of 2
 	i am 1, sending to 0
 	i am 0, recv from 1
@@ -48,7 +77,7 @@ generating the ompi bug is also runnable without bug using mpich:
 	That is all for now!
 	i am 1, sent done to 0
 
-	$ ./1-RUNME ompi
+	$ ./10-RUNME ompi
 	i am 1, sending to 0
 	Hello world: processor 0 of 2
 	i am 0, recv from 1
@@ -56,10 +85,10 @@ generating the ompi bug is also runnable without bug using mpich:
 	^C
 	
 	(stop openmpi containers)
-	$ ./1-RUNME ompi -k
+	$ ./10-RUNME ompi -k
 
 	(restart them, notice the displayed run/debug command:)
-	$ ./1-RUNME ompi --debug
+	$ ./10-RUNME ompi --debug
 	
 	(copy/paste the result from above command:)
 	$ ./ssh-to-container 10.243.1.3 " \
@@ -130,20 +159,20 @@ In more details:
   are setup for the purpose of this demo, and are able to communicate to
   each other (docker prevents this, but some iptables commands re-enable
   this.  Hence the script "zz-postinstall-docker-test" also called by
-  "0-PREPAREME" must be run also after a host reboot).
+  "00-PREPAREME" must be run also after a host reboot).
 
 * instead of starting mpirun from the host, the ./mpirun script ssh into one
   of the docker container so to start from the inside the real mpirun.
 
-* the 1-RUNME script starts docker containers then use the local mpirun script
+* the 10-RUNME script starts docker containers then use the local mpirun script
   to start the application. But is does not stop the containers.
   To restart the application, the most simple is to stop containers first:
 
-	./1-RUNME ompi -k
+	./10-RUNME ompi -k
 
 * to log into containers, instructions to do so are printed using:
 
-	./1-RUNME ompi --debug
+	./10-RUNME ompi --debug
 	
 	[info]
 	
@@ -158,8 +187,8 @@ In more details:
 * the open-mpi version used is the one provided in ubuntu xenial (1.10.2). 
   However the same bug is triggered with the github openmpi version (as of
   master@16/10/31).  To work with it, change "if true" to "if false" on top of
-  "img-testompi/build-ompi-10", run the 2-UNINSTALL script then restart the
-  0-PREPAREME.  docker image build time will be longer.
+  "img-testompi/build-ompi-10", run the 20-UNINSTALL script then restart the
+  00-PREPAREME.  docker image build time will be longer.
 
 * in the final setup, these two bridges are not lying on the same host. 
   Routing tables allow these local bridges to communicate to each other. 
@@ -171,7 +200,7 @@ Informations about network interfaces:
 
   inside a container:
 
-  	$ ./1-RUNME ompi --debug
+  	$ ./10-RUNME ompi --debug
   	[...skip...]
   	$ ./ssh-to-container 10.243.1.2
 	root@e2a265eb93fa:~# ifconfig -a
@@ -198,7 +227,7 @@ Informations about network interfaces:
 
   inside host:
 
-  	brtestdocker1 and 2 are created by 0-PREPARE scripts, they are bridges.
+  	brtestdocker1 and 2 are created by 00-PREPARE scripts, they are bridges.
   	docker0 is another bridge created by docker.
   	ens3 is the kvm interface.
   	eth0 above is bridged with brtestdocker2 on host.

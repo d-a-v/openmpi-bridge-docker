@@ -1,0 +1,14 @@
+allbr=10.0.0.0/8
+echo "----------------------------------------------------"
+echo "docker bridge no/nat rules:"
+echo "----------------------------------------------------"
+echo "before:"
+sudo iptables -L POSTROUTING -v -n -t nat --line-numbers
+echo "----------------------------------------------------"
+for i in brtestdocker1 brtestdocker2; do
+        sudo iptables -t nat -I POSTROUTING -o $i -s $allbr -j ACCEPT
+done
+echo "----------------------------------------------------"
+echo "after:"
+sudo iptables -L POSTROUTING -v -n -t nat --line-numbers
+echo "----------------------------------------------------"

@@ -1,7 +1,0 @@
-
-./1-RUNME ompi -k
-./1-RUNME mpich -k
-docker rmi -f testompi testmpich
-sudo dpkg --purge docker-engine
-sudo groupdel docker
-sudo groupdel dockremap

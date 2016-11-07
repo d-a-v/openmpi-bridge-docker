@@ -1,0 +1,23 @@
+
+./10-RUNME ompi -k
+./10-RUNME mpich -k
+docker rmi -f testompi testmpich
+sudo dpkg --purge docker-engine
+sudo groupdel docker
+sudo groupdel dockremap
+
+echo "----------------------------------------------------"
+echo "docker fix rules - before:"
+echo "----------------------------------------------------"
+sudo iptables -t nat -L POSTROUTING -v --line-numbers
+echo "----------------------------------------------------"
+while true; do
+	dockerrule=$(sudo iptables -t nat -L POSTROUTING -v --line-numbers|grep brtestdocker|awk '{print $1;}'|head -1)
+	test -z "${dockerrule}" && break
+	sudo iptables -t nat -D POSTROUTING ${dockerrule}
+done
+echo "----------------------------------------------------"
+echo "docker fix rules - after:"
+echo "----------------------------------------------------"
+sudo iptables -t nat -L POSTROUTING -v --line-numbers
+echo "----------------------------------------------------"

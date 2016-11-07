@@ -16,7 +16,7 @@ CMD mkdir -p /etc/ssh /root/.ssh /root/bin
 ADD files/ssh/user/* /root/.ssh/
 ADD files/ssh/sshd/* /etc/ssh/
 RUN chmod 400 /etc/ssh/*_key; chmod 444 /etc/ssh/*.pub; chmod 700 /root/.ssh
-RUN apt-get update && apt-get -y install apt-utils && apt-get -y install openssh-server
+RUN apt-get update && apt-get -y install apt-utils openssh-server
 
 # end common
 #################
